@@ -19,6 +19,7 @@ vim.opt.rtp:prepend(lazypath)
 -- Load modular configs
 require("funcs")    -- toggle_detach, safe_bdelete, setup_function_line_count
 require("keymaps")  -- keymaps only
+require("terminal")
 
 -- Load all plugins via your plugins/init.lua
 require("lazy").setup(require("plugins"))
