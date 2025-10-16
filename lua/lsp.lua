@@ -73,6 +73,9 @@ vim.diagnostic.config({
   },
 })
 
+-- Check if nvim-cmp is available
+local has_cmp = pcall(require, "cmp")
+
 -- Define on_attach function
 local on_attach = function(client, bufnr)
   local opts = { buffer = bufnr, noremap = true, silent = true }
@@ -126,9 +129,17 @@ local on_attach = function(client, bufnr)
           local prev_char = string.sub(line, col, col)
           local prev_chars = string.sub(line, col-1, col)
           if prev_char == "." or prev_chars == "->" then
-            vim.schedule(function()
-              require('cmp').complete({ reason = require('cmp').ContextReason.Auto })
-            end)
+            -- If nvim-cmp is available, use it for completion
+            if has_cmp then
+              vim.schedule(function()
+                require('cmp').complete({ reason = require('cmp').ContextReason.Auto })
+              end)
+            else
+              -- Fall back to built-in omnifunc completion
+              vim.schedule(function()
+                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-x><C-o>', true, true, true), 'n', true)
+              end)
+            end
           end
         end
       end
@@ -165,8 +176,9 @@ capabilities.textDocument.completion.completionItem.resolveSupport.properties = 
 }
 
 -- Add nvim-cmp capabilities if available
-local has_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+local cmp_lsp
 if has_cmp then
+  cmp_lsp = require("cmp_nvim_lsp")
   capabilities = cmp_lsp.default_capabilities(capabilities)
 end
 
