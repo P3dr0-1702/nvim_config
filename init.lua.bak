@@ -21,4 +21,4 @@ require("keymaps")  -- keymaps only
 require("lazy").setup(require("plugins"))
 
 -- Load LSP config after plugins
-require("lsp")      -- LSP setup as regular module
+require("lsp")      -- LSP setup
