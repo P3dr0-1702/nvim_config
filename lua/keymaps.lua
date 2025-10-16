@@ -34,15 +34,11 @@ end)
 -- Fonts
 vim.g.have_nerd_font = true
 
--- Keymaps
-local opts = { noremap = true, silent = true }
+-- Import functions from funcs.lua
 local funcs = require("funcs")
 
-vim.keymap.set('n', '<leader>d', funcs.toggle_detach, { noremap = true, silent = true, desc = 'Detach/Reattach buffer' })
-
-
 -- Buffer detach/reattach
-vim.keymap.set('n', '<leader>d', toggle_detach, { desc = 'Detach/Reattach buffer' })
+vim.keymap.set('n', '<leader>d', funcs.toggle_detach, { desc = 'Detach/Reattach buffer' })
 
 -- NvimTree toggle
 vim.keymap.set('n', '<C-b>', ':NvimTreeToggle<CR>')
@@ -65,4 +61,3 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- Buffer navigation
 vim.keymap.set('n', '<leader>l', ':BufferLineCycleNext<CR>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<leader>h', ':BufferLineCyclePrev<CR>', { desc = 'Previous buffer' })
-
