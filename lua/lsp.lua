@@ -61,24 +61,60 @@ local on_attach = function(client, bufnr)
       vim.diagnostic.open_float(nil, { focus = false })
     end,
   })
+  
+  -- Enable automatic completion after . and -> for C/C++
+  if client.name == "clangd" then
+    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    
+    -- Set up autocommand for member completion
+    vim.api.nvim_create_autocmd("TextChangedI", {
+      buffer = bufnr,
+      callback = function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local line = vim.api.nvim_buf_get_lines(0, cursor[1]-1, cursor[1], true)[1]
+        local col = cursor[2]
+        
+        -- Check if the cursor is right after a '.' or '->'
+        if col > 0 then
+          local prev_chars = string.sub(line, col-1, col)
+          if prev_chars == "." or prev_chars == ">" then
+            vim.schedule(function()
+              require('cmp').complete({ reason = require('cmp').ContextReason.Auto })
+            end)
+          end
+        end
+      end
+    })
+  end
 end
 
--- Configure capabilities for autocompletion
+-- Enhanced capabilities with member completion focus
 local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities.textDocument.completion.completionItem.snippetSupport = true
-capabilities.textDocument.completion.completionItem.resolveSupport = {
-  properties = {
-    "documentation",
-    "detail",
-    "additionalTextEdits",
+capabilities.textDocument.completion.completionItem = {
+  documentationFormat = { "markdown", "plaintext" },
+  snippetSupport = true,
+  preselectSupport = true,
+  insertReplaceSupport = true,
+  labelDetailsSupport = true,
+  deprecatedSupport = true,
+  commitCharactersSupport = true,
+  tagSupport = { valueSet = { 1 } },
+  resolveSupport = {
+    properties = {
+      "documentation",
+      "detail",
+      "additionalTextEdits",
+    },
   },
 }
-capabilities.textDocument.completion.completionItem.preselectSupport = true
-capabilities.textDocument.completion.completionItem.insertReplaceSupport = true
-capabilities.textDocument.completion.completionItem.labelDetailsSupport = true
-capabilities.textDocument.completion.completionItem.deprecatedSupport = true
-capabilities.textDocument.completion.completionItem.commitCharactersSupport = true
-capabilities.textDocument.completion.completionItem.tagSupport = { valueSet = { 1 } }
+
+-- Member completion settings
+capabilities.textDocument.completion.completionItem.resolveSupport.properties = {
+  "documentation",
+  "detail",
+  "additionalTextEdits",
+  "labelDetails"
+}
 
 -- Add nvim-cmp capabilities if available
 local has_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
@@ -90,6 +126,9 @@ end
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "c", "cpp", "objc", "objcpp" },
   callback = function()
+    -- Configure completion settings for member access
+    vim.opt_local.completeopt = "menu,menuone,noselect"
+    
     -- Start server if not already started
     vim.lsp.start({
       name = "clangd",
@@ -101,20 +140,25 @@ vim.api.nvim_create_autocmd("FileType", {
         "--header-insertion=iwyu",
         "--suggest-missing-includes",
         "--cross-file-rename",
-        "--completion-style=bundled",
-        "--fallback-style=llvm",
-        "--all-scopes-completion",
+        "--enable-config",            -- Use .clangd configuration file if available
+        "--all-scopes-completion",    -- Complete in all scopes (important for member completion)
+        "--completion-style=detailed", -- Provide more details in completions
+        "--function-arg-placeholders", -- Show function arg placeholders
+        "--header-insertion-decorators", -- Show where headers come from
+        "--include-cleaner-stdlib",     -- Clean up standard library includes
         "--pch-storage=memory",
-        "--offset-encoding=utf-16", -- needed for null-ls
-        "--header-insertion-decorators",
-        "--function-arg-placeholders",
-        "--ranking-model=decision_forest"
+        "--offset-encoding=utf-16",
       },
       on_attach = on_attach,
       capabilities = capabilities,
       root_dir = vim.fn.getcwd(),
+      init_options = {
+        clangdFileStatus = true,
+        usePlaceholders = true,
+        completeUnimported = true,
+        semanticHighlighting = true,
+      },
       handlers = {
-        -- Custom handlers for better integration
         ["textDocument/hover"] = vim.lsp.with(
           vim.lsp.handlers.hover, { border = "rounded" }
         ),
@@ -125,8 +169,3 @@ vim.api.nvim_create_autocmd("FileType", {
     })
   end,
 })
-
--- Add the completion plugin to your plugins list
-if not vim.tbl_contains(require("plugins"), "hrsh7th/nvim-cmp") then
-  vim.notify("Please make sure to add the completion.lua to your plugins directory", vim.log.levels.WARN)
-end

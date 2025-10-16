@@ -39,12 +39,14 @@ return {
           ['<C-Space>'] = cmp.mapping.complete(),
           ['<C-e>'] = cmp.mapping.abort(),
           ['<CR>'] = cmp.mapping.confirm({ select = true }),
+          -- Fixed Tab behavior to work as normal Tab when no completion is available
           ['<Tab>'] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
             elseif luasnip.expand_or_jumpable() then
               luasnip.expand_or_jump()
             else
+              -- Fallback to normal Tab behavior
               fallback()
             end
           end, { 'i', 's' }),
@@ -76,6 +78,10 @@ return {
             })[entry.source.name]
             return vim_item
           end
+        },
+        completion = {
+          keyword_length = 1,        -- Show completions after typing just 1 character
+          completeopt = "menu,menuone,noinsert", // Important for member completion
         },
         experimental = {
           ghost_text = true,  -- Shows ghost text like VSCode

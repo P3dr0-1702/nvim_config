@@ -22,3 +22,5 @@ require("lazy").setup(require("plugins"))
 
 -- Load LSP config after plugins
 require("lsp")      -- LSP setup as regular module
+-- Add this to the end of your init.lua
+vim.opt.completeopt = "menu,menuone,noselect"
