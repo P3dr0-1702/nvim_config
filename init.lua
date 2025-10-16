@@ -23,5 +23,34 @@ require("keymaps")  -- keymaps only
 -- Load all plugins via your plugins/init.lua
 require("lazy").setup(require("plugins"))
 
--- Load LSP config after plugins
-require("lsp")      -- LSP setup as regular module
+-- Enable the lua-loader for better performance
+vim.loader.enable()
+
+-- Basic options
+require("config.options")
+
+-- Load lazy plugin manager (fixed path)
+require("config.lazy") -- Change this line to point to the correct path
+
+-- Configure diagnostics for LSP
+vim.diagnostic.config({
+  virtual_text = true,
+  float = {
+    border = "rounded",
+    focusable = false,
+  },
+  severity_sort = true,
+})
+
+-- Configure LSP handlers
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+  vim.lsp.handlers.hover, {
+    border = "rounded",
+  }
+)
+
+vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+  vim.lsp.handlers.signature_help, {
+    border = "rounded",
+  }
+)

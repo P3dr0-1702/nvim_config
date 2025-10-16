@@ -29,6 +29,14 @@ return {
           end,
           "Show Struct Members"
         }
+        
+        -- Add command to view LSP logs
+        opts.defaults["<leader>pl"] = {
+          function()
+            vim.cmd("LspLog")
+          end,
+          "View LSP Logs"
+        }
       end
     end,
   }

@@ -26,12 +26,19 @@ return {
           end,
         },
         window = {
-          completion = cmp.config.window.bordered({
+          -- Limit the window height to fix the "too big" issue
+          completion = {
+            border = "rounded",
             winhighlight = "Normal:Normal,FloatBorder:FloatBorder,CursorLine:Visual,Search:None",
-          }),
-          documentation = cmp.config.window.bordered({
+            max_height = 10, -- Limit height
+            max_width = 50,  -- Limit width
+          },
+          documentation = {
+            border = "rounded",
             winhighlight = "Normal:Normal,FloatBorder:FloatBorder,CursorLine:Visual,Search:None",
-          }),
+            max_height = 15,
+            max_width = 60,
+          },
         },
         mapping = cmp.mapping.preset.insert({
           ['<C-b>'] = cmp.mapping.scroll_docs(-4),
@@ -60,13 +67,14 @@ return {
             end
           end, { 'i', 's' }),
         }),
-        sources = cmp.config.sources({
-          { name = 'nvim_lsp', priority = 1000 },
+        sources = {
+          -- CRITICAL: Only use LSP for dot completions, buffer is lower priority
+          { name = 'nvim_lsp', priority = 1000, trigger_characters = {'.', ':', '->', ':'} },
           { name = 'nvim_lsp_signature_help', priority = 900 },
           { name = 'luasnip', priority = 750 },
-          { name = 'buffer', priority = 500 },
+          { name = 'buffer', priority = 500, max_item_count = 5, keyword_length = 4 }, -- Reduce buffer importance
           { name = 'path', priority = 250 },
-        }),
+        },
         formatting = {
           format = function(entry, vim_item)
             -- Set a name for each source
@@ -86,6 +94,59 @@ return {
         experimental = {
           ghost_text = true,  -- Shows ghost text like VSCode
         },
+      })
+      
+      -- Special handling for struct member completion
+      cmp.setup.filetype({ 'c', 'cpp' }, {
+        sources = {
+          { name = 'nvim_lsp', priority = 1000 },
+          { name = 'nvim_lsp_signature_help', priority = 900 },
+          { name = 'luasnip', priority = 750 },
+          { name = 'buffer', priority = 100, keyword_length = 5 }, -- Even lower priority for C/C++
+        }
+      })
+
+      -- Special handling for dot completion
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = {"c", "cpp"},
+        callback = function()
+          -- Override behavior for completion after . and ->
+          cmp.event:on("menu_opened", function()
+            if vim.fn.mode() == "i" then
+              local line = vim.api.nvim_get_current_line()
+              local cursor = vim.api.nvim_win_get_cursor(0)
+              local col = cursor[2]
+              
+              -- If we're after a dot or ->, hide buffer completions
+              if col > 0 then
+                local prev_char = string.sub(line, col, col)
+                local prev_chars = string.sub(line, col-1, col)
+                
+                if prev_char == "." or prev_chars == "->" then
+                  -- Force LSP-only completion
+                  cmp.setup.buffer({
+                    sources = {
+                      { name = 'nvim_lsp' },
+                      { name = 'nvim_lsp_signature_help' },
+                    }
+                  })
+                  
+                  -- Restore normal sources after a delay
+                  vim.defer_fn(function()
+                    cmp.setup.buffer({
+                      sources = {
+                        { name = 'nvim_lsp', priority = 1000 },
+                        { name = 'nvim_lsp_signature_help', priority = 900 },
+                        { name = 'luasnip', priority = 750 },
+                        { name = 'buffer', priority = 100, keyword_length = 5 },
+                      }
+                    })
+                  end, 2000)
+                end
+              end
+            end
+          end)
+        end
       })
     end
   }
