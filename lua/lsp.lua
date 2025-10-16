@@ -1,4 +1,4 @@
--- Simple LSP setup for C/C++ development (as a regular Lua module)
+-- Enhanced LSP setup for C/C++ development with VSCode-like features
 
 -- Setup diagnostic signs
 local signs = {
@@ -27,7 +27,7 @@ vim.diagnostic.config({
 })
 
 -- Define on_attach function
-local on_attach = function(_, bufnr)
+local on_attach = function(client, bufnr)
   local opts = { buffer = bufnr, noremap = true, silent = true }
   
   -- LSP keybindings
@@ -43,10 +43,14 @@ local on_attach = function(_, bufnr)
   vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
   vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, opts)
   
-  -- Enable inlay hints if supported
-  if vim.lsp.inlay_hint then
+  -- Setup inlay hints
+  if client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
+    -- Enable inlay hints by default
+    vim.lsp.inlay_hint.enable(bufnr, true)
+    
+    -- Toggle inlay hints with leader+h
     vim.keymap.set("n", "<leader>h", function()
-      vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+      vim.lsp.inlay_hint.enable(bufnr, not vim.lsp.inlay_hint.is_enabled(bufnr))
     end, { buffer = bufnr, desc = "Toggle Inlay Hints" })
   end
   
@@ -57,6 +61,29 @@ local on_attach = function(_, bufnr)
       vim.diagnostic.open_float(nil, { focus = false })
     end,
   })
+end
+
+-- Configure capabilities for autocompletion
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
+capabilities.textDocument.completion.completionItem.resolveSupport = {
+  properties = {
+    "documentation",
+    "detail",
+    "additionalTextEdits",
+  },
+}
+capabilities.textDocument.completion.completionItem.preselectSupport = true
+capabilities.textDocument.completion.completionItem.insertReplaceSupport = true
+capabilities.textDocument.completion.completionItem.labelDetailsSupport = true
+capabilities.textDocument.completion.completionItem.deprecatedSupport = true
+capabilities.textDocument.completion.completionItem.commitCharactersSupport = true
+capabilities.textDocument.completion.completionItem.tagSupport = { valueSet = { 1 } }
+
+-- Add nvim-cmp capabilities if available
+local has_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+if has_cmp then
+  capabilities = cmp_lsp.default_capabilities(capabilities)
 end
 
 -- Start LSP server for C/C++
@@ -72,14 +99,34 @@ vim.api.nvim_create_autocmd("FileType", {
         "--clang-tidy",
         "--completion-style=detailed",
         "--header-insertion=iwyu",
+        "--suggest-missing-includes",
+        "--cross-file-rename",
+        "--completion-style=bundled",
         "--fallback-style=llvm",
-        "--all-scopes-completion"
+        "--all-scopes-completion",
+        "--pch-storage=memory",
+        "--offset-encoding=utf-16", -- needed for null-ls
+        "--header-insertion-decorators",
+        "--function-arg-placeholders",
+        "--ranking-model=decision_forest"
       },
       on_attach = on_attach,
-      capabilities = vim.lsp.protocol.make_client_capabilities(),
-      root_dir = vim.fn.getcwd()
+      capabilities = capabilities,
+      root_dir = vim.fn.getcwd(),
+      handlers = {
+        -- Custom handlers for better integration
+        ["textDocument/hover"] = vim.lsp.with(
+          vim.lsp.handlers.hover, { border = "rounded" }
+        ),
+        ["textDocument/signatureHelp"] = vim.lsp.with(
+          vim.lsp.handlers.signature_help, { border = "rounded" }
+        ),
+      }
     })
   end,
 })
 
--- No need for return value since this is now a regular module
+-- Add the completion plugin to your plugins list
+if not vim.tbl_contains(require("plugins"), "hrsh7th/nvim-cmp") then
+  vim.notify("Please make sure to add the completion.lua to your plugins directory", vim.log.levels.WARN)
+end
