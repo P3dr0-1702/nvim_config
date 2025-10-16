@@ -15,12 +15,13 @@ local function ensure_compile_commands()
       table.insert(sources, source)
     end
     
-    -- Generate compile commands for all source files
+    -- Generate compile commands for all source files with include paths
     for _, source in ipairs(sources) do
       local command = {
         directory = vim.fn.getcwd(),
-        command = "gcc -std=c11 -Wall -Wextra -I" .. vim.fn.getcwd() .. " -o " .. 
-                 vim.fn.fnamemodify(source, ":r") .. ".o -c " .. source,
+        command = "gcc -std=c11 -Wall -Wextra -I" .. vim.fn.getcwd() .. " " ..
+                 " -I. -I./include -I../include " ..
+                 "-o " .. vim.fn.fnamemodify(source, ":r") .. ".o -c " .. source,
         file = source
       }
       table.insert(commands, command)
@@ -30,7 +31,9 @@ local function ensure_compile_commands()
     for _, header in ipairs(headers) do
       local command = {
         directory = vim.fn.getcwd(),
-        command = "gcc -std=c11 -Wall -Wextra -I" .. vim.fn.getcwd() .. " -o /dev/null -c " .. header,
+        command = "gcc -std=c11 -Wall -Wextra -I" .. vim.fn.getcwd() .. " " ..
+                 " -I. -I./include -I../include " ..
+                 "-o /dev/null -c " .. header,
         file = header
       }
       table.insert(commands, command)
@@ -112,6 +115,33 @@ local on_attach = function(client, bufnr)
     end,
   })
   
+  -- Add special mappings for struct completion
+  vim.keymap.set("i", ".", function() 
+    vim.api.nvim_put({"."}, "c", false, true)
+    if has_cmp then
+      vim.defer_fn(function()
+        pcall(function() require('cmp').complete() end)
+      end, 100)
+    else
+      vim.defer_fn(function()
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-x><C-o>', true, true, true), 'n', true)
+      end, 100)
+    end
+  end, { buffer = bufnr, desc = "Trigger completion after ." })
+
+  vim.keymap.set("i", "->", function() 
+    vim.api.nvim_put({"->"}, "c", false, true)
+    if has_cmp then
+      vim.defer_fn(function()
+        pcall(function() require('cmp').complete() end)
+      end, 100)
+    else
+      vim.defer_fn(function()
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-x><C-o>', true, true, true), 'n', true)
+      end, 100)
+    end
+  end, { buffer = bufnr, desc = "Trigger completion after ->" })
+  
   -- Enable automatic completion after . and -> for C/C++
   if client.name == "clangd" then
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
@@ -124,22 +154,42 @@ local on_attach = function(client, bufnr)
         local line = vim.api.nvim_buf_get_lines(0, cursor[1]-1, cursor[1], true)[1]
         local col = cursor[2]
         
-        -- Check if the cursor is right after a '.' or '->'
-        if col > 0 then
+        -- Only proceed if we have valid data
+        if not line or col <= 0 then return end
+        
+        -- Check for dot operator (.)
+        if col > 0 and col <= #line then
           local prev_char = string.sub(line, col, col)
-          local prev_chars = string.sub(line, col-1, col)
-          if prev_char == "." or prev_chars == "->" then
-            -- If nvim-cmp is available, use it for completion
-            if has_cmp then
-              vim.schedule(function()
-                require('cmp').complete({ reason = require('cmp').ContextReason.Auto })
-              end)
-            else
-              -- Fall back to built-in omnifunc completion
-              vim.schedule(function()
+          if prev_char == "." then
+            -- Trigger omnifunc completion
+            vim.schedule(function()
+              if has_cmp then
+                pcall(function()
+                  require('cmp').complete({ reason = require('cmp').ContextReason.Auto })
+                end)
+              else
                 vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-x><C-o>', true, true, true), 'n', true)
-              end)
-            end
+              end
+            end)
+            return
+          end
+        end
+        
+        -- Check for arrow operator (->)
+        if col > 1 and col <= #line then
+          local prev_chars = string.sub(line, col-1, col)
+          if prev_chars == "->" then
+            -- Trigger omnifunc completion
+            vim.schedule(function()
+              if has_cmp then
+                pcall(function()
+                  require('cmp').complete({ reason = require('cmp').ContextReason.Auto })
+                end)
+              else
+                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-x><C-o>', true, true, true), 'n', true)
+              end
+            end)
+            return
           end
         end
       end
@@ -279,6 +329,41 @@ vim.api.nvim_create_autocmd({"BufEnter", "BufWritePost"}, {
   callback = check_header_issues,
 })
 
+-- Create a keymap to toggle struct member visibility
+vim.api.nvim_create_user_command("ToggleStructMembers", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line = vim.api.nvim_buf_get_lines(0, cursor[1]-1, cursor[1], true)[1]
+  
+  -- Find struct variable name under cursor - more robust pattern
+  local var_name = nil
+  if line then
+    local pattern_result = line:match("([%w_]+)%s*$")
+    if pattern_result then
+      var_name = pattern_result:gsub("%s+", "")
+    end
+  end
+  
+  if not var_name or var_name == "" then
+    vim.notify("No variable found under cursor", vim.log.levels.WARN)
+    return
+  end
+  
+  -- Position cursor at the end of the variable name
+  vim.api.nvim_feedkeys(var_name .. ".", 'n', false)
+  
+  -- Wait a bit and trigger completion
+  vim.defer_fn(function()
+    if has_cmp then
+      pcall(function()
+        require('cmp').complete()
+      end)
+    else
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-x><C-o>', true, true, true), 'n', true)
+    end
+  end, 100)
+end, {})
+
 -- Start LSP server for C/C++
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "c", "cpp", "objc", "objcpp" },
@@ -327,22 +412,40 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Create a keymap to toggle struct member visibility
-vim.api.nvim_create_user_command("ToggleStructMembers", function()
+-- Add debug function for struct completion
+vim.api.nvim_create_user_command("DebugStructCompletion", function()
+  -- Check LSP status
+  local clients = vim.lsp.get_active_clients({bufnr = 0})
+  if #clients == 0 then
+    vim.notify("No active LSP clients for this buffer!", vim.log.levels.ERROR)
+    return
+  end
+  
+  -- Check if compile_commands.json exists
+  local has_compile_commands = vim.fn.filereadable(vim.fn.getcwd() .. "/compile_commands.json") == 1
+  
+  -- Get current buffer info
   local bufnr = vim.api.nvim_get_current_buf()
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local line = vim.api.nvim_buf_get_lines(0, cursor[1]-1, cursor[1], true)[1]
+  local file_path = vim.api.nvim_buf_get_name(bufnr)
+  local filetype = vim.bo.filetype
   
-  -- Find struct variable name under cursor
-  local var_name = line:match("%S+%s*$"):gsub("%s+", "")
-  if not var_name then return end
-  
-  -- Request completions for this struct
-  vim.lsp.buf.completion({
-    context = { triggerKind = 2 }, -- Trigger kind 2 = TriggerKind.TriggerCharacter
-    triggerCharacter = "."
-  })
+  -- Test struct completion
+  vim.notify(string.format(
+    "LSP Diagnostics:\n" ..
+    "- Active LSP: %s\n" ..
+    "- File: %s\n" ..
+    "- Filetype: %s\n" ..
+    "- Has compile_commands.json: %s\n\n" ..
+    "Try typing a struct variable followed by a dot (.) to trigger completion",
+    clients[1].name,
+    file_path,
+    filetype,
+    has_compile_commands and "Yes" or "No"
+  ), vim.log.levels.INFO)
 end, {})
+
+-- Add keymapping for the debug command
+vim.keymap.set("n", "<leader>pd", ":DebugStructCompletion<CR>", { noremap = true, silent = true, desc = "Debug Struct Completion" })
 
 -- Export functions for use elsewhere
 return {

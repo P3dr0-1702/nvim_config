@@ -2,6 +2,9 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- Set completeopt globally
+vim.opt.completeopt = "menu,menuone,noselect"
+
 -- bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -22,5 +25,3 @@ require("lazy").setup(require("plugins"))
 
 -- Load LSP config after plugins
 require("lsp")      -- LSP setup as regular module
--- Add this to the end of your init.lua
-vim.opt.completeopt = "menu,menuone,noselect"
