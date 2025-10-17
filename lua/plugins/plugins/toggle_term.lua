@@ -5,7 +5,7 @@ return {
 		config = function()
 		require('toggleterm').setup {
 			size = 15,
-			open_mapping = [[<leader>t]],
+			--open_mapping = [[<leader>t]],
 			shade_terminals = true,
 			direction = 'float',
 			float_opts = { border = 'curved' },
