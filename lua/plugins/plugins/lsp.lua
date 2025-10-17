@@ -1,6 +1,8 @@
 return {
     {
         "neovim/nvim-lspconfig",
+        -- Pin to a specific commit or version before the deprecation warnings
+        commit = "e49b1e90c1781ce372013de3fa93a91ea29fc34a", -- This is a commit from March 2023
         event = { "BufReadPre", "BufNewFile" },
         dependencies = {},
         opts = {
