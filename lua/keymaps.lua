@@ -39,6 +39,21 @@ local funcs = require("funcs")
 
 -- === Plugin-Specific Keymaps (Centralized) === --
 
+-- Auto-delete buffers when closing with :q or :wq
+local funcs = require("funcs")
+
+vim.api.nvim_create_user_command('Q', function() funcs.safe_bdelete() end, {})
+vim.api.nvim_create_user_command('WQ', function() funcs.safe_bdelete() end, {})
+
+-- Override common commands with command-line abbreviations
+vim.cmd [[
+  cnoreabbrev <expr> q getcmdtype() == ':' && getcmdline() == 'q' ? 'Q' : 'q'
+  cnoreabbrev <expr> wq getcmdtype() == ':' && getcmdline() == 'wq' ? 'WQ' : 'wq'
+]]
+
+-- Create command abbreviations
+vim.cmd('cabbrev q Q')
+vim.cmd('cabbrev wq WQ')
 -- Toggle Terminal
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()

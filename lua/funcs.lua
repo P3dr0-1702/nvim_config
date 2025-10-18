@@ -1,6 +1,11 @@
+-- ~/.config/nvim/lua/funcs.lua
+
 local detached_buffers = {}
 
-local function safe_bdelete()
+local M = {}
+
+-- Safe buffer delete
+function M.safe_bdelete()
     if #vim.fn.getbufinfo { buflisted = 1 } == 1 then
         vim.cmd 'quit'
     else
@@ -8,7 +13,8 @@ local function safe_bdelete()
     end
 end
 
-local function toggle_detach()
+-- Toggle detach buffer to new terminal
+function M.toggle_detach()
     local bufname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
     if bufname == '' then
         vim.notify('Cannot detach an empty buffer', vim.log.levels.WARN)
@@ -148,7 +154,6 @@ end
 -- Initialize the function line count feature
 setup_function_line_count()
 
-return {
-    toggle_detach = toggle_detach,
-    safe_bdelete = safe_bdelete,
-}
+-- Return module table
+return M
+
