@@ -28,7 +28,7 @@ return {
             local on_attach = function(client, bufnr)
                 -- Add any additional LSP keybinds here if needed
                 vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = bufnr })
-				vim.keymap.set('n', '<C-g>', vim.lsp.buf.definition, bufopts)
+				vim.keymap.set('n', '<leader>g', vim.lsp.buf.definition, bufopts)
 			end
 
             local function setup(server, server_config)

@@ -3,14 +3,41 @@
 local detached_buffers = {}
 
 local M = {}
-
--- Safe buffer delete
+-- Safe buffer delete with auto-focus to the first buffer
 function M.safe_bdelete()
-    if #vim.fn.getbufinfo { buflisted = 1 } == 1 then
-        vim.cmd 'quit'
-    else
-        vim.cmd 'bdelete!'
+    -- If this is the last buffer, just quit
+    if #vim.fn.getbufinfo({ buflisted = 1 }) <= 1 then
+        vim.cmd('quit')
+        return
     end
+    
+    -- Not the last buffer, so get the current one
+    local current_buf = vim.api.nvim_get_current_buf()
+    
+    -- Get all valid buffers that aren't the current one and aren't NvimTree
+    local valid_buffers = {}
+    for _, buf in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+        local bufnr = buf.bufnr
+        if bufnr ~= current_buf and 
+           vim.api.nvim_buf_is_valid(bufnr) and
+           vim.api.nvim_buf_get_option(bufnr, 'filetype') ~= 'NvimTree' then
+            table.insert(valid_buffers, bufnr)
+        end
+    end
+    
+    -- Delete current buffer
+    vim.cmd('bdelete!')
+    
+    -- If we have other valid buffers, switch to one of them
+    if #valid_buffers > 0 then
+        vim.api.nvim_set_current_buf(valid_buffers[1])
+    end
+end
+
+-- Function to save and close buffer
+function M.save_and_close()
+    vim.cmd('write')  -- Save the file
+    M.safe_bdelete()  -- Then close it properly
 end
 
 -- Toggle detach buffer to new terminal
@@ -156,4 +183,3 @@ setup_function_line_count()
 
 -- Return module table
 return M
-

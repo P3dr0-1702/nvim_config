@@ -42,8 +42,9 @@ local funcs = require("funcs")
 -- Auto-delete buffers when closing with :q or :wq
 local funcs = require("funcs")
 
+-- Fixed commands to properly handle :q and :wq
 vim.api.nvim_create_user_command('Q', function() funcs.safe_bdelete() end, {})
-vim.api.nvim_create_user_command('WQ', function() funcs.safe_bdelete() end, {})
+vim.api.nvim_create_user_command('WQ', function()  funcs.save_and_close() end, {})
 
 -- Override common commands with command-line abbreviations
 vim.cmd [[
@@ -51,9 +52,10 @@ vim.cmd [[
   cnoreabbrev <expr> wq getcmdtype() == ':' && getcmdline() == 'wq' ? 'WQ' : 'wq'
 ]]
 
--- Create command abbreviations
-vim.cmd('cabbrev q Q')
-vim.cmd('cabbrev wq WQ')
+-- Remove these duplicate abbreviations that could be causing conflicts
+-- vim.cmd('cabbrev q Q')
+-- vim.cmd('cabbrev wq WQ')
+
 -- Toggle Terminal
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
@@ -111,3 +113,14 @@ vim.keymap.set('n', '<leader>k', '<C-w><C-k>', { desc = 'Move focus to the upper
 -- Buffer navigation
 vim.keymap.set('n', '<C-l>', ':BufferLineCycleNext<CR>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<C-h>', ':BufferLineCyclePrev<CR>', { desc = 'Previous buffer' })
+
+-- Make delete operations not affect the yank register
+vim.keymap.set('n', 'dd', '"_dd', { noremap = true, desc = 'Delete line without yanking' })
+vim.keymap.set('n', 'd', '"_d', { noremap = true, desc = 'Delete without yanking' })
+vim.keymap.set('v', 'd', '"_d', { noremap = true, desc = 'Delete without yanking' })
+vim.keymap.set('n', 'D', '"_D', { noremap = true, desc = 'Delete to end of line without yanking' })
+vim.keymap.set('n', 'x', '"_x', { noremap = true, desc = 'Delete character without yanking' })
+vim.keymap.set('v', 'x', '"_x', { noremap = true, desc = 'Delete character without yanking' })
+vim.keymap.set('n', 'c', '"_c', { noremap = true, desc = 'Change without yanking' })
+vim.keymap.set('v', 'c', '"_c', { noremap = true, desc = 'Change without yanking' })
+vim.keymap.set('n', 'C', '"_C', { noremap = true, desc = 'Change to end of line without yanking' })
