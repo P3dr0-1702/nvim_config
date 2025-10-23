@@ -55,3 +55,10 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
     border = "rounded",
   }
 )
+
+-- Auto Save
+
+vim.api.nvim_create_autocmd({"InsertLeave", "TextChanged"}, {
+  pattern = "*",
+  command = "silent! wall"
+})
