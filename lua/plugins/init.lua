@@ -2,8 +2,9 @@
 local plugin_files = {
   "42_header", "toggle_term", "dev_webicons", "gitsigns",
   "whichkey", "telescope", "mini_pairs", "buffer_line",
-  "blink", "conform", "lazydev", "todo-comment", "lsp",
-  "tokyonight", "treesitter", "completion", "project_helper", -- Added completion and project_helper
+  "conform", "lazydev", "todo-comment", "lsp",
+  "treesitter", "completion", "project_helper",
+  "kanagawa",-- Added completion and project_helper
 }
 
 local plugins = {}
