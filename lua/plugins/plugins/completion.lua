@@ -1,5 +1,7 @@
+-- Updated completion.lua: make Tab confirm selection (not cycle), make Enter only confirm when menu visible,
+-- and avoid auto-selecting the first item (select = false) to prevent accidental completions/snippet expansions.
+
 return {
-  -- Main completion plugin
   {
     "hrsh7th/nvim-cmp",
     event = { "InsertEnter", "CmdlineEnter" },
@@ -45,18 +47,30 @@ return {
           ['<C-f>'] = cmp.mapping.scroll_docs(4),
           ['<C-Space>'] = cmp.mapping.complete(),
           ['<C-e>'] = cmp.mapping.abort(),
-          ['<CR>'] = cmp.mapping.confirm({ select = true }),
-          -- Fixed Tab behavior to work as normal Tab when no completion is available
-          ['<Tab>'] = cmp.mapping(function(fallback)
+
+          -- Enter: confirm only when menu is visible. Otherwise insert newline (fallback).
+          -- select = false prevents auto-selecting first item when nothing explicitly selected.
+          ['<CR>'] = cmp.mapping(function(fallback)
             if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
+              cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
             else
-              -- Fallback to normal Tab behavior
               fallback()
             end
           end, { 'i', 's' }),
+
+          -- Tab: if completion menu visible, confirm the currently selected item (don't move to next),
+          -- else expand/jump snippets, else fallback to normal Tab behavior.
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+
+          -- Shift-Tab: go to previous item or jump backwards in snippet, else fallback
           ['<S-Tab>'] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_prev_item()
