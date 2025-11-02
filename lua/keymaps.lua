@@ -109,7 +109,8 @@ vim.keymap.set('n', '<leader>h', '<C-w><C-h>', { desc = 'Move focus to the left 
 vim.keymap.set('n', '<leader>l', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<leader>j', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<leader>k', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
+--cut command
+vim.keymap.set({'n', 'v'}, '<leader>x', '"+d', { desc = 'Cut to clipboard' })
 -- Buffer navigation
 vim.keymap.set('n', '<C-l>', ':BufferLineCycleNext<CR>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<C-h>', ':BufferLineCyclePrev<CR>', { desc = 'Previous buffer' })
@@ -124,3 +125,17 @@ vim.keymap.set('v', 'x', '"_x', { noremap = true, desc = 'Delete character witho
 vim.keymap.set('n', 'c', '"_c', { noremap = true, desc = 'Change without yanking' })
 vim.keymap.set('v', 'c', '"_c', { noremap = true, desc = 'Change without yanking' })
 vim.keymap.set('n', 'C', '"_C', { noremap = true, desc = 'Change to end of line without yanking' })
+
+local M = {}
+
+M.visual_multi = {
+    maps = {
+        ["Find Under"]         = "<C-d>", -- select next occurrence
+        ["Find Subword Under"] = "<C-d>", -- select next subword
+        ["Select All"]         = "<C-a>", -- select all occurrences
+        ["Add Cursor Up"]      = "<C-Up>", -- add cursor above
+        ["Add Cursor Down"]    = "<C-Down>", -- add cursor below
+    },
+    highlight = "visual" -- optional, default is 'visual'
+}
+return M

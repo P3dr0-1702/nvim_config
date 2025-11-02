@@ -16,7 +16,8 @@ return {
                         "--clang-tidy",
                         "-j=5",
                         "--malloc-trim",
-                        "--offset-encoding=utf-16"
+                        "--offset-encoding=utf-16",
+                        "--header-insertion=never", -- <- Prevent clangd from auto-adding #includes
                     },
                     filetypes = { "c", "cpp" },
                 },

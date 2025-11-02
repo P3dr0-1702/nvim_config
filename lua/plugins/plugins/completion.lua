@@ -1,4 +1,4 @@
--- Updated completion.lua: make Tab confirm selection (not cycle), make Enter only confirm when menu visible,
+-- Updated completion.lua: make Tab confirm selection (not cycle), make Enter always insert a newline,
 -- and avoid auto-selecting the first item (select = false) to prevent accidental completions/snippet expansions.
 
 return {
@@ -48,14 +48,12 @@ return {
           ['<C-Space>'] = cmp.mapping.complete(),
           ['<C-e>'] = cmp.mapping.abort(),
 
-          -- Enter: confirm only when menu is visible. Otherwise insert newline (fallback).
-          -- select = false prevents auto-selecting first item when nothing explicitly selected.
+          -- Enter: always insert newline. If the menu is visible, close it first so Enter never confirms.
           ['<CR>'] = cmp.mapping(function(fallback)
             if cmp.visible() then
-              cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
-            else
-              fallback()
+              cmp.close()
             end
+            fallback()
           end, { 'i', 's' }),
 
           -- Tab: if completion menu visible, confirm the currently selected item (don't move to next),
