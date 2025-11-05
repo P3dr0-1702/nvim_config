@@ -4,7 +4,7 @@ local plugin_files = {
   "whichkey", "telescope", "mini_pairs", "buffer_line",
   "conform", "lazydev", "todo-comment", "lsp",
   "treesitter", "completion", "project_helper",
-  "kanagawa", "vim_mmulti_cursor",-- Added completion and project_helper
+  "kanagawa", "vim_mmulti_cursor",
 }
 
 local plugins = {}
