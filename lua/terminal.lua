@@ -1,64 +1,65 @@
--- Enhanced Terminal Toggle functionality (uses your system terminal environment)
+-- STABLE terminal.lua for NeoVim
+
 local Terminal = {
   buf = nil,
   win = nil,
-  term = nil,
-  height = 15, -- Height of the terminal window
+  job_id = nil,
+  height = 15,
 }
 
 function Terminal:toggle()
   if self.win and vim.api.nvim_win_is_valid(self.win) then
-    -- Terminal is visible, hide it
     vim.api.nvim_win_hide(self.win)
     self.win = nil
     return
   end
 
+  -- Create buffer if missing or invalid
   if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then
-    -- Create a new terminal buffer if needed
     self.buf = vim.api.nvim_create_buf(false, true)
-    
-    -- Get the user's login shell to ensure all environment variables and configs are loaded
+
     local shell = os.getenv("SHELL") or vim.o.shell
-    
-    -- Open terminal with full environment
-    -- The empty table parameter ensures we inherit the parent process environment
-    self.term = vim.fn.termopen(shell, {
-      detach = 0,
-      env = {}, -- Empty table means inherit all environment variables
-      cwd = vim.fn.getcwd() -- Start in the current working directory
-    })
+    vim.cmd("lcd " .. vim.fn.getcwd())
+
+    -- IMPORTANT: start term before opening window
+    vim.api.nvim_buf_call(self.buf, function()
+      self.job_id = vim.fn.termopen(shell)
+    end)
   end
 
-  -- Create a new window at the bottom
+  -- Open floating window
   local width = vim.o.columns
   local height = self.height
-  
   self.win = vim.api.nvim_open_win(self.buf, true, {
     relative = "editor",
     width = width,
     height = height,
     col = 0,
-    row = vim.o.lines - height - 1, -- Position at bottom
+    row = vim.o.lines - height,
     style = "minimal",
     border = "single",
   })
 
-  -- Set some window-local options
-  vim.wo[self.win].winblend = 0
+  vim.wo[self.win].winfixheight = true
   vim.wo[self.win].number = false
   vim.wo[self.win].relativenumber = false
-  vim.wo[self.win].cursorline = false
-  
-  -- Automatically enter insert mode when opening terminal
   vim.cmd("startinsert")
 end
 
--- Create keymapping for toggling terminal
-vim.keymap.set('n', '<leader>t', function() Terminal:toggle() end, { noremap = true, silent = true, desc = "Toggle Terminal" })
+vim.keymap.set('n', '<leader>t', function()
+  Terminal:toggle()
+end, { noremap = true, silent = true, desc = "Toggle Terminal" })
 
--- Terminal mode mappings to make it behave more like your regular terminal
-vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', { noremap = true, silent = true })
+vim.api.nvim_create_autocmd('TermOpen', {
+  pattern = 'term://*',
+  group = vim.api.nvim_create_augroup('MyTerminalMaps', { clear = true }),
+  callback = function()
+    local opts = { buffer = 0, noremap = true, silent = true }
+    vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], opts)
+    vim.keymap.set('t', '<C-h>', [[<C-\><C-n><C-w>h]], opts)
+    vim.keymap.set('t', '<C-j>', [[<C-\><C-n><C-w>j]], opts)
+    vim.keymap.set('t', '<C-k>', [[<C-\><C-n><C-w>k]], opts)
+    vim.keymap.set('t', '<C-l>', [[<C-\><C-n><C-w>l]], opts)
+  end,
+})
 
--- Optional: Add more terminal mode mappings for common terminal shortcuts
-vim.keymap.set('t', '<C-w>', '<C-\\><C-n><C-w>', { noremap = true, silent = true }) -- Window navigation from terminal
