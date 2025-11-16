@@ -4,17 +4,16 @@ vim.g.maplocalleader = " "
 
 local funcs = require("core.funcs")
 
-vim.keymap.set("n", "<leader>b", ":bd<CR>", { silent = true, noremap = true })
---   funcs.safe_bdelete()
--- end, {})
--- vim.api.nvim_create_user_command("WQ", function()
---   funcs.save_and_close()
--- end, {})
---
--- vim.cmd([[
---     cnoreabbrev <expr> q getcmdtype() == ':' && getcmdline() == 'q' ? 'Q' : 'q'
---     cnoreabbrev <expr> wq getcmdtype() == ':' && getcmdline() == 'wq' ? 'WQ' : 'wq'
--- ]])
+-- Fixed commands to properly handle :q and :wq
+vim.api.nvim_create_user_command('Q', function() funcs.safe_bdelete() end, {})
+vim.api.nvim_create_user_command('WQ', function()  funcs.save_and_close() end, {})
+
+-- Override common commands with command-line abbreviations
+vim.cmd [[
+  cnoreabbrev <expr> q getcmdtype() == ':' && getcmdline() == 'q' ? 'Q' : 'q'
+  cnoreabbrev <expr> wq getcmdtype() == ':' && getcmdline() == 'wq' ? 'WQ' : 'wq'
+]]
+
 
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
@@ -64,15 +63,15 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Window navigation
-vim.keymap.set("n", "<leader>h", "<C-w><C-h>", { desc = "Move focus to the left window" })
-vim.keymap.set("n", "<leader>l", "<C-w><C-l>", { desc = "Move focus to the right window" })
-vim.keymap.set("n", "<leader>j", "<C-w><C-j>", { desc = "Move focus to the lower window" })
-vim.keymap.set("n", "<leader>k", "<C-w><C-k>", { desc = "Move focus to the upper window" })
+vim.keymap.set("n", "<leader>h", "<C-w>h", { desc = "Move focus to the left window" })
+vim.keymap.set("n", "<leader>l", "<C-w>l", { desc = "Move focus to the right window" })
+vim.keymap.set("n", "<leader>j", "<C-w>j", { desc = "Move focus to the lower window" })
+vim.keymap.set("n", "<leader>k", "<C-w>k", { desc = "Move focus to the upper window" })
 --cut command
 vim.keymap.set({ "n", "v" }, "<leader>x", '"+d', { desc = "Cut to clipboard" })
 -- Buffer navigation
-vim.keymap.set("n", "<C-l>", ":BufferLineCycleNext<CR>", { desc = "Next buffer" })
-vim.keymap.set("n", "<C-h>", ":BufferLineCyclePrev<CR>", { desc = "Previous buffer" })
+vim.keymap.set("n", "<C-l>", "<cmd>BufferLineCycleNext<CR>", { noremap = true, desc = "Next buffer" })
+vim.keymap.set("n", "<C-h>", "<cmd>BufferLineCyclePrev<CR>", { noremap = true, desc = "Previous buffer" })
 
 -- Make delete operations not affect the yank register
 vim.keymap.set("n", "dd", '"_dd', { noremap = true, desc = "Delete line without yanking" })
