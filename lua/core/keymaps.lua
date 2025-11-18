@@ -84,6 +84,8 @@ vim.keymap.set("n", "c", '"_c', { noremap = true, desc = "Change without yanking
 vim.keymap.set("v", "c", '"_c', { noremap = true, desc = "Change without yanking" })
 vim.keymap.set("n", "C", '"_C', { noremap = true, desc = "Change to end of line without yanking" })
 
+vim.keymap.set("n", "<leader>g", vim.lsp.buf.definition, {noremap = true, silent = true})
+
 local M = {}
 
 M.visual_multi = {
