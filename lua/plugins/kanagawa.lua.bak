@@ -28,7 +28,6 @@ return {
           light = "lotus"
         },
       })
-      
       -- Apply the colorscheme
       vim.cmd("colorscheme kanagawa-wave")
     end,

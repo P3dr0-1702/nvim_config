@@ -7,12 +7,14 @@ local funcs = require("core.funcs")
 -- Fixed commands to properly handle :q and :wq
 vim.api.nvim_create_user_command('Q', function() funcs.safe_bdelete() end, {})
 vim.api.nvim_create_user_command('WQ', function()  funcs.save_and_close() end, {})
+vim.api.nvim_create_user_command('B', function() funcs.safe_bdelete() end, {})
+vim.api.nvim_create_user_command('WB', function() funcs.save_and_close() end, {})
 
--- Override common commands with command-line abbreviations
-vim.cmd [[
-  cnoreabbrev <expr> q getcmdtype() == ':' && getcmdline() == 'q' ? 'Q' : 'q'
-  cnoreabbrev <expr> wq getcmdtype() == ':' && getcmdline() == 'wq' ? 'WQ' : 'wq'
-]]
+-- -- Override common commands with command-line abbreviations
+-- vim.cmd [[
+--   cnoreabbrev <expr> q getcmdtype() == ':' && getcmdline() == 'q' ? 'Q' : 'q'
+--   cnoreabbrev <expr> wq getcmdtype() == ':' && getcmdline() == 'wq' ? 'WQ' : 'wq'
+-- ]]
 
 
 vim.api.nvim_create_autocmd("VimEnter", {
