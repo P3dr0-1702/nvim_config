@@ -3,7 +3,6 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 local funcs = require("core.funcs")
-
 -- Fixed commands to properly handle :q and :wq
 vim.api.nvim_create_user_command('Q', function() funcs.safe_bdelete() end, {})
 vim.api.nvim_create_user_command('WQ', function()  funcs.save_and_close() end, {})
@@ -75,6 +74,9 @@ vim.keymap.set({ "n", "v" }, "<leader>x", '"+d', { desc = "Cut to clipboard" })
 vim.keymap.set("n", "<C-l>", "<cmd>BufferLineCycleNext<CR>", { noremap = true, desc = "Next buffer" })
 vim.keymap.set("n", "<C-h>", "<cmd>BufferLineCyclePrev<CR>", { noremap = true, desc = "Previous buffer" })
 
+--Insert empty line without exiting 
+vim.keymap.set('n', '<CR>', 'm`o<Esc>``')
+vim.keymap.set('n', '<S-CR>', 'm`O<Esc>``')
 -- Make delete operations not affect the yank register
 vim.keymap.set("n", "dd", '"_dd', { noremap = true, desc = "Delete line without yanking" })
 vim.keymap.set("n", "d", '"_d', { noremap = true, desc = "Delete without yanking" })
