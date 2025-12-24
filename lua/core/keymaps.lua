@@ -59,6 +59,7 @@ end, { noremap = true, silent = true, desc = "Format with 42 formatter" })
 
 -- Search
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+vim.keymap.set("n", "<leader>w", "<cmd>Telescope live_grep<CR>")
 
 -- Terminal mode exit
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
@@ -89,6 +90,16 @@ vim.keymap.set("v", "c", '"_c', { noremap = true, desc = "Change without yanking
 vim.keymap.set("n", "C", '"_C', { noremap = true, desc = "Change to end of line without yanking" })
 
 vim.keymap.set("n", "<leader>g", vim.lsp.buf.definition, {noremap = true, silent = true})
+
+vim.api.nvim_create_user_command('WQA', function()
+  vim.cmd('wa')
+  vim.cmd('qa')
+end, { desc = "Write all then quit all" })
+
+-- Split horizontally (down)
+vim.api.nvim_set_keymap('n', '<leader>sh', ':split<CR>', { noremap = true, silent = true })
+-- Split vertically (right)
+vim.api.nvim_set_keymap('n', '<leader>sv', ':vsplit<CR>', { noremap = true, silent = true })
 
 local M = {}
 
