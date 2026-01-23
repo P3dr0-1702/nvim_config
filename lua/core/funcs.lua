@@ -38,8 +38,8 @@ function M.safe_bdelete()
     for _, buf in ipairs(listed_buffers) do
         if buf.bufnr ~= current_buf
             and vim.api.nvim_buf_is_valid(buf.bufnr)
-            and vim.api.nvim_buf_get_option(buf.bufnr, 'filetype') ~= 'NvimTree'
-        then
+            and vim.api.nvim_get_option_value('filetype', { buf = buf.bufnr }) ~= 'NvimTree'
+		then
             next_buf = buf.bufnr
             break
         end
@@ -73,8 +73,8 @@ function M.safe_bdelete_all()
     for _, buf in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
         local bufnr = buf.bufnr
         if vim.api.nvim_buf_is_valid(bufnr)
-            and vim.api.nvim_buf_get_option(bufnr, 'filetype') ~= 'NvimTree'
-        then
+            and vim.api.nvim_get_option_value('filetype', { buf = bufnr }) ~= 'NvimTree'
+		then
             table.insert(to_delete, bufnr)
         end
     end
