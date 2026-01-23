@@ -21,7 +21,7 @@ return {
       {
         "williamboman/mason.nvim",
         opts = {
-          ui = {
+         ui = {
             icons = {
               package_installed = "✓",
               package_pending = "➜",
