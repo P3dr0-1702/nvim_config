@@ -8,6 +8,7 @@ vim.api.nvim_create_user_command('Q', function() funcs.safe_bdelete() end, {})
 vim.api.nvim_create_user_command('WQ', function()  funcs.save_and_close() end, {})
 vim.api.nvim_create_user_command('B', function() funcs.safe_bdelete() end, {})
 vim.api.nvim_create_user_command('WB', function() funcs.save_and_close() end, {})
+vim.api.nvim_create_user_command('BA', function() funcs.save_all_and_bdelete_all() end, {})
 
 -- -- Override common commands with command-line abbreviations
 -- vim.cmd [[
@@ -48,7 +49,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 --safe_bdelete
-vim.keymap.set('n', "<leader>c", ":B<CR>")
+vim.keymap.set('n', "<leader>cc", ":B<CR>")
+vim.keymap.set('n', "<leader>ca", ":BA<CR>")
 
 -- NvimTree toggle
 vim.keymap.set("n", "<C-b>", ":NvimTreeToggle<CR>")

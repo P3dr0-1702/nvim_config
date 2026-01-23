@@ -57,7 +57,41 @@ function M.save_and_close()
     M.safe_bdelete()  -- Then close it properly
 end
 
--- Toggle detach buffer to new terminal
+function M.safe_bdelete_all()
+    -- Ensure NvimTree is open and focused
+    if vim.fn.bufwinnr('NvimTree') == -1 then
+        vim.cmd('NvimTreeOpen')
+    end
+    local tree_winnr = vim.fn.bufwinnr('NvimTree')
+    if tree_winnr ~= -1 then
+        vim.cmd(tree_winnr .. 'wincmd w')
+        vim.cmd('only')
+    end
+
+    -- Collect all listed buffers that are not NvimTree
+    local to_delete = {}
+    for _, buf in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+        local bufnr = buf.bufnr
+        if vim.api.nvim_buf_is_valid(bufnr)
+            and vim.api.nvim_buf_get_option(bufnr, 'filetype') ~= 'NvimTree'
+        then
+            table.insert(to_delete, bufnr)
+        end
+    end
+
+    -- Delete them
+    for _, bufnr in ipairs(to_delete) do
+        if vim.api.nvim_buf_is_valid(bufnr) then
+            vim.api.nvim_buf_delete(bufnr, { force = true })
+        end
+    end
+end
+
+function M.save_all_and_bdelete_all()
+  pcall(function() vim.cmd('wa') end)
+  M.safe_bdelete_all()
+end-- Toggle detach buffer to new terminal
+
 function M.toggle_detach()
     local bufname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
     if bufname == '' then
