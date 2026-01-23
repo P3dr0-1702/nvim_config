@@ -3,38 +3,55 @@
 local detached_buffers = {}
 
 local M = {}
--- Safe buffer delete with auto-focus to the first buffer
+
+-- Safe buffer delete with NvimTree fallback
 function M.safe_bdelete()
-    -- If this is the last buffer, just quit
-    if #vim.fn.getbufinfo({ buflisted = 1 }) <= 1 then
-        vim.cmd('quit')
+    local listed_buffers = vim.fn.getbufinfo({ buflisted = 1 })
+    local current_buf = vim.api.nvim_get_current_buf()
+
+    -- LAST BUFFER CASE
+    if #listed_buffers <= 1 then
+        -- Open NvimTree if not already open
+        local tree_winnr = vim.fn.bufwinnr('NvimTree')
+        if tree_winnr == -1 then
+            vim.cmd('NvimTreeOpen')
+            tree_winnr = vim.fn.bufwinnr('NvimTree')
+        end
+
+        -- Focus NvimTree and make it fullscreen
+        if tree_winnr ~= -1 then
+            vim.cmd(tree_winnr .. 'wincmd w')
+            vim.cmd('only')
+        end
+
+        -- HARD delete the buffer (no replacement buffer)
+        if vim.api.nvim_buf_is_valid(current_buf) then
+            vim.api.nvim_buf_delete(current_buf, { force = true })
+        end
+
         return
     end
-    
-    -- Not the last buffer, so get the current one
-    local current_buf = vim.api.nvim_get_current_buf()
-    
-    -- Get all valid buffers that aren't the current one and aren't NvimTree
-    local valid_buffers = {}
-    for _, buf in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
-        local bufnr = buf.bufnr
-        if bufnr ~= current_buf and 
-           vim.api.nvim_buf_is_valid(bufnr) and
-           vim.api.nvim_buf_get_option(bufnr, 'filetype') ~= 'NvimTree' then
-            table.insert(valid_buffers, bufnr)
+
+    -- MULTIPLE BUFFERS CASE
+    local next_buf = nil
+
+    for _, buf in ipairs(listed_buffers) do
+        if buf.bufnr ~= current_buf
+            and vim.api.nvim_buf_is_valid(buf.bufnr)
+            and vim.api.nvim_buf_get_option(buf.bufnr, 'filetype') ~= 'NvimTree'
+        then
+            next_buf = buf.bufnr
+            break
         end
     end
-    
-    -- Delete current buffer
-    vim.cmd('bdelete!')
-    
-    -- If we have other valid buffers, switch to one of them
-    if #valid_buffers > 0 then
-        vim.api.nvim_set_current_buf(valid_buffers[1])
-    end
-end
 
--- Function to save and close buffer
+    -- Switch first, then delete (prevents flicker)
+    if next_buf then
+        vim.api.nvim_set_current_buf(next_buf)
+    end
+
+    vim.api.nvim_buf_delete(current_buf, { force = true })
+end-- Function to save and close buffer
 function M.save_and_close()
     vim.cmd('write')  -- Save the file
     M.safe_bdelete()  -- Then close it properly
