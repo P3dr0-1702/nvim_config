@@ -22,9 +22,13 @@ function Terminal:toggle()
     vim.cmd("lcd " .. vim.fn.getcwd())
 
     -- IMPORTANT: start term before opening window
+
     vim.api.nvim_buf_call(self.buf, function()
-      self.job_id = vim.fn.termopen(shell)
-    end)
+      self.job_id = vim.fn.jobstart(shell, {
+        term = true,
+      })
+end)
+
   end
 
   -- Open floating window

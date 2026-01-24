@@ -207,11 +207,13 @@ local function setup_function_line_count()
             if query.captures[id] == 'function' then
                 local start_row, _, end_row, _ = node:range()
                 local line_count = end_row - start_row + 1 - 3
-                vim.api.nvim_buf_set_virtual_text(
-                    bufnr, ns_id, end_row,
-                    { { '// Function: ' .. line_count .. ' lines', 'Comment' } },
-                    {}
-                )
+                vim.api.nvim_buf_set_extmark(bufnr, ns_id, end_row, 0, {
+				    virt_text = {
+				        { '// Function: ' .. line_count .. ' lines', 'Comment' },
+				    },
+				    virt_text_pos = 'eol',
+				})
+
             end
         end
     end
