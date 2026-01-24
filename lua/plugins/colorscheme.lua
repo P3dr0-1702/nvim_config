@@ -31,6 +31,7 @@ return
       })
       -- Apply the colorscheme
       vim.cmd("colorscheme kanagawa-wave")
+	vim.api.nvim_set_hl(0, "Cursor", { fg = "#1f1f28", bg = "#c8c093" })
     end,
   },
 }

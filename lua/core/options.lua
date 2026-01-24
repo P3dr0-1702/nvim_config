@@ -43,3 +43,11 @@ opt.swapfile = false
 -- Show whitespace characters
 opt.list = true
 opt.listchars = { tab = '» ', space = '·', trail = '·', nbsp = '␣' }
+
+opt.guicursor = {
+  "n-v-c:block",
+  "i:block",
+  "r-cr:hor20",
+  "o:hor50",
+}
+
