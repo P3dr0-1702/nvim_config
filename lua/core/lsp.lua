@@ -56,8 +56,12 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 local severity = vim.diagnostic.severity
 
+-- default: virtual text (original behavior)
+local diagnostics_virtual_lines = false
+
 vim.diagnostic.config({
-	virtual_text = true,
+  virtual_text = true,
+  virtual_lines = false,
   signs = {
     text = {
       [severity.ERROR] = " ",
@@ -67,3 +71,13 @@ vim.diagnostic.config({
     },
   },
 })
+
+-- Toggle diagnostics display style
+vim.keymap.set("n", "<leader>z", function()
+diagnostics_virtual_lines = not diagnostics_virtual_lines
+vim.diagnostic.config({
+  virtual_text = not diagnostics_virtual_lines,
+  virtual_lines = diagnostics_virtual_lines,
+})
+vim.notify("Diagnostics: " .. (diagnostics_virtual_lines and "virtual_lines" or "virtual_text"))
+end, { noremap = true, silent = true, desc = "Toggle diagnostics display" })

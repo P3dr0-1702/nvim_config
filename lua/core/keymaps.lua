@@ -106,6 +106,12 @@ vim.api.nvim_set_keymap('n', '<leader>sh', ':split<CR>', { noremap = true, silen
 -- Split vertically (right)
 vim.api.nvim_set_keymap('n', '<leader>sv', ':vsplit<CR>', { noremap = true, silent = true })
 
+-- Resize windows (Alt + Arrow, inverted left/right)
+vim.keymap.set("n", "<A-Left>",  ":vertical resize +5<CR>", { noremap = true, silent = true, desc = "Increase window width" })
+vim.keymap.set("n", "<A-Right>", ":vertical resize -5<CR>", { noremap = true, silent = true, desc = "Decrease window width" })
+vim.keymap.set("n", "<A-Up>",    ":resize -2<CR>",         { noremap = true, silent = true, desc = "Decrease window height" })
+vim.keymap.set("n", "<A-Down>",  ":resize +2<CR>",         { noremap = true, silent = true, desc = "Increase window height" })
+
 local M = {}
 
 M.visual_multi = {
